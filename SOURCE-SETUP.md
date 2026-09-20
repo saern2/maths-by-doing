@@ -47,3 +47,16 @@ School role and Hyderabad location were supplied by the site owner. Portrait and
 Design reference: https://mathigon.org/ (visual mathematics and geometry); no third-party layouts or assets were copied.
 
 The floating “Designed by Agentixsquad” credit links to https://agentixsquad.com/ and opens in a new tab.
+
+## Hosting on Vercel
+
+`vercel.json` makes Vercel run `next build` (via `pnpm run build:vercel`) instead of the Cloudflare/vinext build, so the standard `.next` output and `routes-manifest.json` are produced. The registration API stores enquiries in a Turso (libSQL) database instead of Cloudflare D1; it uses the same `registrations` table and creates it automatically on first use.
+
+Set these environment variables in Vercel (Settings > Environment Variables, all environments):
+
+- `TURSO_DATABASE_URL`, for example `libsql://maths-by-doing-<org>.turso.io`
+- `TURSO_AUTH_TOKEN`, a token for that database
+
+Both values come from the Turso dashboard (https://turso.tech) or from the Turso integration on the Vercel Marketplace, which injects them automatically. Until they are set the site builds and loads, but the form returns "We could not save your enquiry". For local testing use `TURSO_DATABASE_URL=file:local.db` in `.env.local`. `.env.example` lists the variables.
+
+The Cloudflare/vinext scripts (`pnpm dev`, `pnpm build`, `pnpm start`) remain for the ChatGPT Sites deployment but the database layer now targets libSQL only.
