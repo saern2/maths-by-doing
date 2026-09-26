@@ -139,6 +139,18 @@ try {
     snapshot = await r.json();
     assert.equal(snapshot.content.text.brand, "Maths by Doing");
     assert(snapshot.content.lessons.length >= 24);
+    const legacy = structuredClone(snapshot.content);
+    delete legacy.registrationClasses;
+    await db.execute({
+      sql: "UPDATE site_content SET data=? WHERE id=1",
+      args: [JSON.stringify(legacy)],
+    });
+    const compatible = await (await request("/api/admin/content")).json();
+    assert.deepEqual(
+      compatible.content.registrationClasses,
+      snapshot.content.registrationClasses,
+    );
+    assert.deepEqual(compatible.content.text, legacy.text);
   });
   await check(
     "cross-site publishing, script URLs, duplicate lessons and large requests are rejected",
@@ -201,6 +213,65 @@ try {
         409,
       );
       snapshot = saved;
+    },
+  );
+  await check(
+    "registration options persist, accept additions and reject removed or duplicate options",
+    async () => {
+      const original = structuredClone(snapshot.content);
+      for (const registrationClasses of [[], ["Class 6", "class 6"]]) {
+        assert.equal(
+          (
+            await request("/api/admin/content", {
+              method: "PUT",
+              body: {
+                ...snapshot,
+                content: { ...snapshot.content, registrationClasses },
+              },
+            })
+          ).status,
+          400,
+        );
+      }
+      snapshot.content.registrationClasses =
+        snapshot.content.registrationClasses
+          .filter((c) => c !== "Class 6")
+          .concat("IB Mathematics");
+      let response = await request("/api/admin/content", {
+        method: "PUT",
+        body: snapshot,
+      });
+      assert.equal(response.status, 200);
+      snapshot = await response.json();
+      const persisted = await (await request("/api/admin/content")).json();
+      assert(persisted.content.registrationClasses.includes("IB Mathematics"));
+      assert(!persisted.content.registrationClasses.includes("Class 6"));
+      for (const [studentClass, expected] of [
+        ["IB Mathematics", 200],
+        ["Class 6", 400],
+      ]) {
+        assert.equal(
+          (
+            await request("/api/register", {
+              method: "POST",
+              auth: false,
+              body: {
+                id: randomUUID(),
+                name: "Dropdown Test",
+                email: "dropdown@example.test",
+                studentClass,
+              },
+            })
+          ).status,
+          expected,
+        );
+      }
+      response = await request("/api/admin/content", {
+        method: "PUT",
+        body: { ...snapshot, content: original },
+      });
+      assert.equal(response.status, 200);
+      snapshot = await response.json();
     },
   );
   await check(
@@ -365,6 +436,14 @@ try {
         .getByRole("button", { name: "Website content", exact: true })
         .click();
       await page.getByLabel("Website name").fill("QA Maths Studio");
+      await page.getByText("Registration dropdown", { exact: true }).click();
+      await page.getByLabel("New registration class").fill("IB Mathematics");
+      await page
+        .getByRole("button", { name: "Add class", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Delete Class 6", exact: true })
+        .click();
       page.on("dialog", (d) => d.accept());
       await page.getByRole("button", { name: "Publish changes" }).click();
       await page
@@ -380,9 +459,22 @@ try {
           .innerText()
           .then((t) => t.includes("QA Maths Studio")),
       );
+      await publicPage.getByRole("combobox").click();
+      await publicPage
+        .getByRole("option", { name: "IB Mathematics", exact: true })
+        .waitFor();
+      assert.equal(
+        await publicPage
+          .getByRole("option", { name: "Class 6", exact: true })
+          .count(),
+        0,
+      );
+      await publicPage
+        .getByRole("option", { name: "IB Mathematics", exact: true })
+        .click();
       await publicPage.close();
       await page
-        .getByRole("button", { name: "Student enquiries", exact: true })
+        .getByRole("button", { name: /^Student enquiries/ })
         .click();
       await page
         .getByRole("button")
@@ -407,7 +499,24 @@ try {
         "Images",
         "Student enquiries",
       ]) {
-        await page.getByRole("button", { name: title, exact: true }).click();
+        await page.getByRole("button", { name: new RegExp("^" + title) }).click();
+        if (title === "Website content") {
+          await page
+            .getByText("Registration dropdown", { exact: true })
+            .click();
+          await page
+            .getByLabel("New registration class")
+            .fill("Mobile test class");
+          await page
+            .getByRole("button", { name: "Add class", exact: true })
+            .click();
+          await page
+            .getByRole("button", {
+              name: "Delete Mobile test class",
+              exact: true,
+            })
+            .click();
+        }
         await page.waitForTimeout(200);
         assert(
           await page.evaluate(

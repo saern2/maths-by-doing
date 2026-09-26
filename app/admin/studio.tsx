@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import {
   textFields,
-  classChoices,
   contentSchema,
   type SiteContent,
 } from "@/lib/site-content";
@@ -87,6 +86,7 @@ export default function AdminStudio({ initial }: { initial: Snapshot }) {
     [selected, setSelected] = useState<Enquiry | null>(null);
   const [newVideo, setNewVideo] = useState(""),
     [uploading, setUploading] = useState("");
+  const [newClass, setNewClass] = useState("");
   const dirty = JSON.stringify(content) !== JSON.stringify(saved.content);
   const loadEnquiries = useCallback(
     (signal?: AbortSignal) =>
@@ -699,7 +699,11 @@ export default function AdminStudio({ initial }: { initial: Snapshot }) {
                       <label>
                         Default enquiry class
                         <select
-                          value={c.select}
+                          value={
+                            content.registrationClasses.includes(c.select)
+                              ? c.select
+                              : ""
+                          }
                           onChange={(e) =>
                             setContent((v) => ({
                               ...v,
@@ -714,13 +718,92 @@ export default function AdminStudio({ initial }: { initial: Snapshot }) {
                             }))
                           }
                         >
-                          {classChoices.map((c) => (
+                          <option value="">Let student choose</option>
+                          {content.registrationClasses.map((c) => (
                             <option key={c}>{c}</option>
                           ))}
                         </select>
                       </label>
                     </fieldset>
                   ))}
+                </div>
+              </details>
+              <details className="studio-card editor-section">
+                <summary>
+                  <span className="section-number">10</span>
+                  <div>
+                    <h2>Registration dropdown</h2>
+                    <p>Add or remove the classes students can select</p>
+                  </div>
+                  <Plus size={18} />
+                </summary>
+                <div className="editor-fields">
+                  <p className="muted">
+                    Changes appear on the website after you publish. Keep at
+                    least one option.
+                  </p>
+                  <div className="inline-input">
+                    <input
+                      aria-label="New registration class"
+                      placeholder="e.g. IB Mathematics"
+                      value={newClass}
+                      maxLength={80}
+                      onChange={(e) => setNewClass(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="studio-primary"
+                      disabled={
+                        !newClass.trim() ||
+                        content.registrationClasses.length >= 50
+                      }
+                      onClick={() => {
+                        const value = newClass.trim();
+                        if (
+                          content.registrationClasses.some(
+                            (c) => c.toLowerCase() === value.toLowerCase(),
+                          )
+                        ) {
+                          setError("This class is already in the dropdown.");
+                          return;
+                        }
+                        setContent((c) => ({
+                          ...c,
+                          registrationClasses: [
+                            ...c.registrationClasses,
+                            value,
+                          ],
+                        }));
+                        setNewClass("");
+                        setError("");
+                      }}
+                    >
+                      <Plus size={17} /> Add class
+                    </button>
+                  </div>
+                  <div className="registration-options">
+                    {content.registrationClasses.map((value) => (
+                      <div className="registration-option" key={value}>
+                        <span>{value}</span>
+                        <button
+                          type="button"
+                          className="studio-secondary"
+                          aria-label={"Delete " + value}
+                          disabled={content.registrationClasses.length <= 1}
+                          onClick={() =>
+                            setContent((c) => ({
+                              ...c,
+                              registrationClasses: c.registrationClasses.filter(
+                                (v) => v !== value,
+                              ),
+                            }))
+                          }
+                        >
+                          <Trash2 size={16} /> Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </details>
             </div>

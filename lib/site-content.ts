@@ -185,6 +185,16 @@ export const contentSchema = z
         facebook: link,
       })
       .strict(),
+    registrationClasses: z
+      .array(z.string().trim().min(1).max(80))
+      .min(1, "Keep at least one registration option.")
+      .max(50)
+      .refine(
+        (values) =>
+          new Set(values.map((v) => v.toLowerCase())).size === values.length,
+        "Registration options must be unique.",
+      )
+      .default([...classChoices]),
     courses: z
       .array(
         z
@@ -193,7 +203,7 @@ export const contentSchema = z
             level: z.string().trim().min(1).max(100),
             description: z.string().trim().min(1).max(700),
             topics: z.array(z.string().trim().min(1).max(120)).length(2),
-            select: z.enum(classChoices),
+            select: z.string().trim().max(80),
           })
           .strict(),
       )
@@ -229,6 +239,7 @@ export const defaultContent: SiteContent = {
     youtube: "https://www.youtube.com/@mathsbydoing",
     facebook: "https://www.facebook.com/arlsan.shaikh.9",
   },
+  registrationClasses: [...classChoices],
   courses: [
     {
       title: "Build your foundation",

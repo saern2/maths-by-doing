@@ -30,19 +30,8 @@ import {
 } from "@/components/ui/dialog";
 import type { SiteContent } from "@/lib/site-content";
 
-const classes = [
-  "Class 6",
-  "Class 7",
-  "Class 8",
-  "Class 9",
-  "Class 10",
-  "Class 11",
-  "Class 12",
-  "O Level",
-  "A Level",
-  "AKU-EB",
-];
 export default function Home({ content }: { content: SiteContent }) {
+  const classes = content.registrationClasses;
   const t = content.text;
   const lessons = content.lessons;
   const whatsapp = content.links.whatsapp;
@@ -63,14 +52,12 @@ export default function Home({ content }: { content: SiteContent }) {
   const [paused, setPaused] = useState(false);
   const [chat, setChat] = useState(false);
   function choose(value: string) {
-    setStudentClass(value);
-    document
-      .getElementById("register")
-      ?.scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "auto"
-          : "smooth",
-      });
+    setStudentClass(classes.includes(value) ? value : "");
+    document.getElementById("register")?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
   }
   useEffect(() => {
     const context = (
@@ -113,7 +100,7 @@ export default function Home({ content }: { content: SiteContent }) {
       ).catch(() => {});
     } catch {}
     return () => controller.abort();
-  }, []);
+  }, [classes]);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!studentClass) {

@@ -1459,3 +1459,23 @@
     scroll-behavior: auto !important;
   }
 }
+
+.registration-options {
+  display: grid;
+  gap: 8px;
+}
+.registration-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eadde3;
+}
+.registration-option > span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.registration-option > button {
+  flex-shrink: 0;
+}

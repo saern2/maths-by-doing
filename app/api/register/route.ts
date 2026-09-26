@@ -1,3 +1,4 @@
+import { readContent } from "@/db/admin";
 import { sameOrigin } from "@/lib/same-origin";
 import { ensureRegistrationSchema, registrationDb } from "@/db/registrations";
 import { z } from "zod";
@@ -7,18 +8,7 @@ const schema = z.object({
   id: z.string().uuid(),
   name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(254),
-  studentClass: z.enum([
-    "Class 6",
-    "Class 7",
-    "Class 8",
-    "Class 9",
-    "Class 10",
-    "Class 11",
-    "Class 12",
-    "O Level",
-    "A Level",
-    "AKU-EB",
-  ]),
+  studentClass: z.string().trim().min(1).max(80),
   website: z.string().max(0).optional(),
 });
 export async function POST(request: Request) {
@@ -49,6 +39,15 @@ export async function POST(request: Request) {
     );
   try {
     const d = value.data;
+    const { content } = await readContent();
+    if (!content.registrationClasses.includes(d.studentClass))
+      return Response.json(
+        {
+          error:
+            "This class is no longer available. Refresh the page and choose a current class.",
+        },
+        { status: 400 },
+      );
     await ensureRegistrationSchema();
     await registrationDb().execute({
       sql: "INSERT INTO registrations (id,name,email,student_class,created_at) VALUES (?,?,?,?,?) ON CONFLICT(id) DO NOTHING",
