@@ -1,3 +1,13 @@
+# Maths by Doing
+
+Live website: https://mathsbydoing.vercel.app
+
+This repository runs on Vercel with Next.js and Turso/libSQL. For the new teacher studio at /admin, see [ADMIN-SETUP.md](ADMIN-SETUP.md). Set ADMIN_EMAIL and ADMIN_PASSWORD_HASH in Vercel and redeploy to enable sign-in. No default account is shipped.
+
+Use `pnpm dev:vercel` for local Next.js development and `pnpm build:vercel` for the production build. The original starter notes below describe the older Cloudflare/Vinext tooling and are retained as historical reference.
+
+---
+
 # vinext-starter
 
 A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.

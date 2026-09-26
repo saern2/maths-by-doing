@@ -1,5 +1,7 @@
 # Maths by Doing — complete source
 
+**Current deployment:** Vercel + Turso/libSQL. Use the “Hosting on Vercel” section below and [ADMIN-SETUP.md](ADMIN-SETUP.md). Cloudflare instructions describe the original export.
+
 This archive contains the website frontend, registration backend, database schema and migration, logo, portrait, lesson list, components, pinned dependency lockfile and build configuration. It does not contain passwords, installed dependencies or student registrations.
 
 ## Run locally
@@ -22,7 +24,7 @@ pnpm build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_wide_vin_gonzales.sql
 ```
 
-Apply this migration only once to a new database. The form saves enquiries; it does not send email notifications or automatically send WhatsApp messages. The visitor must send the prepared WhatsApp message themselves. There is no teacher admin dashboard in this version. Production enquiries are private database records, not included in the source archive.
+Apply this migration only once to a new database. The form saves enquiries; it does not send email notifications or automatically send WhatsApp messages. The visitor must send the prepared WhatsApp message themselves. A teacher admin dashboard is now available at /admin; see ADMIN-SETUP.md. Production enquiries are private database records, not included in the source archive.
 
 ## What to edit
 
