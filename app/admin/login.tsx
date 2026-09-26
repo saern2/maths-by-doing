@@ -13,9 +13,11 @@ import {
 export default function Login({
   configured,
   unavailable = false,
+  setupIssues = [],
 }: {
   configured: boolean;
   unavailable?: boolean;
+  setupIssues?: string[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false),
@@ -91,7 +93,8 @@ export default function Login({
             <div className="admin-alert" role="status">
               {unavailable
                 ? "The database is unavailable. Ask the site owner to check the Turso connection."
-                : "Your studio is ready for setup. The site owner needs to configure the admin email and password using ADMIN-SETUP.md."}
+                : setupIssues.join(" ") +
+                  " Update these values in the Vercel Production environment, then redeploy. No credential values are shown here."}
             </div>
           )}
           <label>

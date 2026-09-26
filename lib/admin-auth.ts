@@ -1,4 +1,5 @@
 import "server-only";
+import { readAdminConfig } from "./admin-config";
 import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import { cookies } from "next/headers";
@@ -9,24 +10,24 @@ export const cookieName = "maths_admin_session";
 export const sessionAge = 8 * 60 * 60;
 export const digest = (v: string) =>
   createHash("sha256").update(v).digest("hex");
+export function adminSetupIssues() {
+  return readAdminConfig(process.env).issues;
+}
 export function authConfigured() {
-  return (
-    !!process.env.ADMIN_EMAIL &&
-    /^[a-f0-9]{32}:[a-f0-9]{128}$/.test(process.env.ADMIN_PASSWORD_HASH || "")
-  );
+  return readAdminConfig(process.env).configured;
 }
 function credentialVersion() {
-  return digest(
-    process.env.ADMIN_EMAIL + "|" + process.env.ADMIN_PASSWORD_HASH,
-  );
+  const config = readAdminConfig(process.env);
+  return digest(config.email + "|" + config.passwordHash);
 }
 export async function verifyPassword(email: string, password: string) {
-  if (!authConfigured()) return false;
-  const [salt, hash] = process.env.ADMIN_PASSWORD_HASH!.split(":");
+  const config = readAdminConfig(process.env);
+  if (!config.configured) return false;
+  const [salt, hash] = config.passwordHash.split(":");
   const actual = (await derive(password, salt, 64)) as Buffer;
   return (
     timingSafeEqual(actual, Buffer.from(hash, "hex")) &&
-    email.toLowerCase().trim() === process.env.ADMIN_EMAIL!.toLowerCase().trim()
+    email.toLowerCase().trim() === config.email
   );
 }
 export async function authenticated() {

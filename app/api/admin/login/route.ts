@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import {
   allowLogin,
   authConfigured,
+  adminSetupIssues,
   verifyPassword,
   createSession,
   cookieName,
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
       return json(
         {
           error:
-            "Admin sign-in has not been configured. Ask the site owner to follow ADMIN-SETUP.md.",
+            "Admin sign-in is unavailable. " + adminSetupIssues().join(" "),
         },
         503,
       );
